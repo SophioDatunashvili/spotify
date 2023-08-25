@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  spotify:
+    build:
+      context: .
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./:/app
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    command: celery -A spotify_api_project worker -l DEBUG
+    volumes:
+      - ./:/app
+    depends_on:
+      - spotify
+      - redis
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Use the appropriate Dockerfile
+    command: celery -A spotify_api_project beat --loglevel=info
+    volumes:
+      - ./:/app
+    depends_on:
+      - spotify
+      - redis
+
+  redis:
+    image: redis:7.0.12
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+
